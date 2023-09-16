@@ -75,6 +75,18 @@ public class Appartamento {
 	
 	@Column(name="stato_condominio", length=255, nullable=false, unique=false)
 	private String stato_condominio;
+	
+	@Column(name="cap", length=5, nullable=false, unique=false)
+	private String cap;
+
+	
+	public String getCap() {
+		return cap;
+	}
+
+	public void setCap(String cap) {
+		this.cap = cap;
+	}
 
 	public String getId() {
 		return id;

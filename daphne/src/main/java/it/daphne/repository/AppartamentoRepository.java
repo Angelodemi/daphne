@@ -17,4 +17,5 @@ public interface AppartamentoRepository extends CrudRepository<Appartamento, Str
 	
 	@Query(value= "select distinct id from appartamento")
 	List<String> findAllId();
+	
 }

@@ -1,7 +1,10 @@
 package it.daphne.controllers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import it.daphne.entity.Appartamento;
 import it.daphne.entity.InterventoPulizia;
 import it.daphne.repository.AppartamentoRepository;
 import it.daphne.repository.InterventoPuliziaRepository;
@@ -378,7 +382,63 @@ public class GoogleMapsController {
 		return null;
 		
 		
-		
 	}
 
+	private Map<String,List<String>> raggruppaCap() {
+		List<InterventoPulizia> interventiOggi = interventoPuliziaRepository.findAllInterventiOggi();
+		Map<String, List<String>> listaCap=new HashMap<>();
+		for(InterventoPulizia intervento: interventiOggi) {
+			Optional<Appartamento> a=appartamentoRepository.findById(intervento.getIdAppartamento());
+			if(!listaCap.containsKey(a.get().getCap())) {
+				List<String> idApp= new ArrayList<>();
+				idApp.add(a.get().getId());
+				listaCap.put(a.get().getCap(), idApp);
+			}
+			else {
+				List<String> idApp= listaCap.get(a.get().getCap());
+				idApp.add(a.get().getId());
+				listaCap.replace(a.get().getCap(), idApp);
+			}	
+		}
+	 return listaCap;
+	}
+	
+	private void creaGruppi(Map<String,List<String>> listaCap) {
+		Map<Integer,List<String>> gruppo= new HashMap<>();
+		//TODO tra i cap che ho, devo vedere i cap che sono adiacenti e ordinarli da quelli che ne hanno di meno a di piu
+		for (Map.Entry<String,List<String>> entry: listaCap.entrySet())
+		{
+		    String key = entry.getKey();
+		    List<String> value = entry.getValue();
+		 
+		    if(value.size()==4) {
+		    	gruppo.put(gruppo.size(), value);
+		    }
+		    else if(value.size()>4) {
+		    	int i=0;
+		    	while(i<value.size()) {
+		    		List<String> cap=new ArrayList<>();
+		    		if(i%4==0 && i!=0) {
+		    			gruppo.put(gruppo.size(), cap);
+		    			value.remove(cap.get(0));
+		    			value.remove(cap.get(1));
+		    			value.remove(cap.get(2));
+		    			value.remove(cap.get(3));
+		    			cap.clear();
+		    			cap.add(value.get(i));
+		    		}
+		    		else {
+		    			cap.add(value.get(i));
+		    		}
+		    	}
+		    }
+		    else if(value.size()<4) {
+		    	
+		    }
+		}
+	}
+	
+	
+	
+	
 }
