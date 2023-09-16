@@ -97,7 +97,6 @@ public class MainController {
     inserisciInterventoPulizia(checkOutPrec, giorniDispPerLavare, p);
 
     return "Saved";
-    
   }
   
 
