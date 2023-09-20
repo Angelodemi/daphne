@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toMap;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,180 +37,77 @@ public class GoogleMapsController {
 	@Autowired
 	private AppartamentoRepository appartamentoRepository;
 	
-	private static final Map<String,List<String>> cap= 
-	Map.of("00134","00128",          "00134", new ArrayList<String>(Arrays.asList("00128","00143","00178")),
-		   "00134","00143",           "00128", new ArrayList<String>(Arrays.asList("00134","00143","00144","00127","00125","00124")),
-		   ,           "00124", new ArrayList<String>(Arrays.asList("00128","00122","00125","00121","00119")),
-		   "00128","00134",			 "00122", new ArrayList<String>(Arrays.asList("00124","00121")),
-		   "00128","00143",          "00121", new ArrayList<String>(Arrays.asList("00122","00124","00119")),
-		   "00128","00144",			"00119", new ArrayList<String>(Arrays.asList("00121","00124","00125","00126","00148")),
-		   "00128","00127",			"00126", new ArrayList<String>(Arrays.asList("00119","00125","00127","00148")),
-		   "00128","00125",			"00127", new ArrayList<String>(Arrays.asList("00128","00125","00126","00148","00144")),
-		   "00125","00128",			"00125", new ArrayList<String>(Arrays.asList("00128","00124","00127","00126","00119")),
-		   "00125","00124",			"00148", new ArrayList<String>(Arrays.asList("00119","00126","00127","00144","00146","00149","00151","00164","00163","00166")),
-		   "00148","00119",			"00163", new ArrayList<String>(Arrays.asList("00166","00148","00164","00165")),
-		   "00163","00166",			"00166", new ArrayList<String>(Arrays.asList("00163","00148","00167","00165","00168","00135","00123")),
-		   "00123","00166",			"00123", new ArrayList<String>(Arrays.asList("00135","00189","00188","00166")),
-		   							"00188", new ArrayList<String>(Arrays.asList("00123","00189","00138")),
-		   "00188","00123",			"00138", new ArrayList<String>(Arrays.asList("00188","00189","00191","00139","00141")),
-		   "00138","00188",			"00139", new ArrayList<String>(Arrays.asList("00138","00141","00137")),
-		   "00137","00139",			"00137", new ArrayList<String>(Arrays.asList("00139","00141","00156","00131")),
-		   							"00131", new ArrayList<String>(Arrays.asList("00137","00155","00156","00132")),
-		   							"00132", new ArrayList<String>(Arrays.asList("00133","00155","00131")),
-		   							"00133", new ArrayList<String>(Arrays.asList("00173","00169","00155","00132")),
-		   							"00173", new ArrayList<String>(Arrays.asList("00133","00169","00175","00174","00178","00118")),
-		   							"00118", new ArrayList<String>(Arrays.asList("00173","00178")),
-		   							"00178", new ArrayList<String>(Arrays.asList("00134","00143","00142","00179","00181","00175","00174","00173","00118")),
-		   							"00143", new ArrayList<String>(Arrays.asList("00178","00134","00128","00144","00142")),
-		   							"00144", new ArrayList<String>(Arrays.asList("00143","00128","00127","00148","00146","00145","00142","00143")),
-		   							"00165", new ArrayList<String>(Arrays.asList("00163","00166","00167","00136","00193","00185","00153","00152","00164")),
-		   							"00135", new ArrayList<String>(Arrays.asList("00168","00166","00123","00189","00191","00196","00195","00136")),
-		   							"00189", new ArrayList<String>(Arrays.asList("00135","00123","00188","00138","00191")),
-		   							"00156", new ArrayList<String>(Arrays.asList("00141","00137","00155","00158","00131")),
-		   							"00155", new ArrayList<String>(Arrays.asList("00132","00131","00156","00153","00172","00177","00159","00133","00169","00171")),
-		   							"00169", new ArrayList<String>(Arrays.asList("00133","00173","00175","00172","00155")),
-		   							"00142", new ArrayList<String>(Arrays.asList("00178","00147","00179","00143","00144","00145")),
-		   							"00146", new ArrayList<String>(Arrays.asList("00144","00154","00145","00148","00149","00153")),
-		   							"00149", new ArrayList<String>(Arrays.asList("00148","00151","00152","00153","00146")),
-		   							"00151", new ArrayList<String>(Arrays.asList("00164","00152","00149","00148")),
-		   							"00164", new ArrayList<String>(Arrays.asList("00148","00151","00163","00165","00152")),
-		   							"00168", new ArrayList<String>(Arrays.asList("00166","00167","00135","00136")),
-		   							"00167", new ArrayList<String>(Arrays.asList("00168","00136","00165","00166")),
-		   							"00136", new ArrayList<String>(Arrays.asList("00167","00190","00165","00168","00135","00195")),
-		   							"00195", new ArrayList<String>(Arrays.asList("00135","00196","00190")),
-		   							"00191", new ArrayList<String>(Arrays.asList("00135","00197","00196","00189","00138","00199")),
-
-		   "00196","00135",
-		   "00196","00191",
-		   "00196","00197",
-		   "00196","00187",
-		   "00196","00185",
-		   "00196","00190",
-		   "00196","00195",
-		   "00197","00196",
-		   "00197","00191",
-		   "00197","00189",
-		   "00197","00198",
-		   "00197","00187",
-		   "00189","00197",
-		   "00189","00191",
-		   "00189","00138",
-		   "00189","00141",
-		   "00189","00182",
-		   "00189","00198",
-		   "00141","00189",
-		   "00141","00138",
-		   "00141","00139",
-		   "00141","00137",
-		   "00141","00156",
-		   "00141","00158",
-		   "00141","00157",
-		   "00141","00182",
-		   "00153","00157",
-		   "00153","00141",
-		   "00153","00156",
-		   "00153","00155",
-		   "00153","00159",
-		   "00157","00153",
-		   "00157","00159",
-		   "00157","00185",
-		   "00157","00182",
-		   "00157","00141",
-		   "00159","00155",
-		   "00159","00177",
-		   "00159","00186",
-		   "00159","00185",
-		   "00159","00182",
-		   "00159","00157",
-		   "00159","00158",
-		   "00186","00177",
-		   "00186","00175",
-		   "00186","00181",
-		   "00186","00182",
-		   "00186","00185",
-		   "00186","00159",
-		   "00177","00155",
-		   "00177","00171",
-		   "00177","00172",
-		   "00177","00175",
-		   "00177","00181",
-		   "00177","00186",
-		   "00177","00159",
-		   "00171","00177",
-		   "00171","00155",
-		   "00171","00172",
-		   "00172","00155",
-		   "00172","00169",
-		   "00172","00175",
-		   "00172","00177",
-		   "00172","00171",
-		   "00175","00172",
-		   "00175","00169",
-		   "00175","00173",
-		   "00175","00174",
-		   "00175","00181",
-		   "00175","00186",
-		   "00175","00177",
-		   "00174","00173",
-		   "00174","00178",
-		   "00174","00175",
-		   "00147","00142",
-		   "00147","00145",
-		   "00147","00154",
-		   "00147","00179",
-		   "00147","00178",
-		   "00145","00147",
-		   "00145","00142",
-		   "00145","00144",
-		   "00145","00146",
-		   "00145","00154",
-		   "00154","00146",
-		   "00154","00153",
-		   "00154","00179",
-		   "00154","00147",
-		   "00154","00145",
-		   "00153","00154",
-		   "00153","00146",
-		   "00153","00149",
-		   "00153","00152",
-		   "00153","00165",
-		   "00153","00185",
-		   "00153","00164",
-		   "00153","00179",
-		   "00152","00151",
-		   "00152","00149",
-		   "00152","00164",
-		   "00152","00153",
-		   "00193","00190",
-		   "00193","00186",
-		   "00193","00165",
-		   "00190","00165",
-		   "00190","00193",
-		   "00190","00136",
-		   "00190","00196",
-		   "00187","00185",
-		   "00187","00190",
-		   "00187","00196",
-		   "00187","00197",
-		   "00187","00198",
-		   "00187","00161",
-		   "00187","00185",
-		   "00187","00184",
-		   "00185","00184",
-		   "00185","00187",
-		   "00185","00161",
-		   "00185","00182",
-		   "00185","00159",
-		   "00185","00188",
-		   "00185","00182",
-		   "00185","00183",
-		   "00184","00183",
-		   "00184","00159",
-		   "00184","00153",
-		   "00184","00186",
-		   "00184","00187",
-		   "00184","00185");
-
+	private  Map<String,List<String>> caps= new HashMap<String,List<String>>(){{
+		put("00134", new ArrayList<String>(Arrays.asList("00128","00143","00178")));
+		put("00128", new ArrayList<String>(Arrays.asList("00134","00143","00144","00127","00125","00124")));
+		put("00124", new ArrayList<String>(Arrays.asList("00128","00122","00125","00121","00119")));
+		put("00122", new ArrayList<String>(Arrays.asList("00124","00121")));
+		put( "00121", new ArrayList<String>(Arrays.asList("00122","00124","00119")));
+		put("00119", new ArrayList<String>(Arrays.asList("00121","00124","00125","00126","00148")));
+		put("00126", new ArrayList<String>(Arrays.asList("00119","00125","00127","00148")));
+		put("00127", new ArrayList<String>(Arrays.asList("00128","00125","00126","00148","00144")));
+		put("00125", new ArrayList<String>(Arrays.asList("00128","00124","00127","00126","00119")));
+		put("00148", new ArrayList<String>(Arrays.asList("00119","00126","00127","00144","00146","00149","00151","00164","00163","00166")));
+										
+		put("00163", new ArrayList<String>(Arrays.asList("00166","00148","00164","00165")));
+		put("00166", new ArrayList<String>(Arrays.asList("00163","00148","00167","00165","00168","00135","00123")));
+	
+	
+		put("00123", new ArrayList<String>(Arrays.asList("00135","00189","00188","00166")));
+				put("00188", new ArrayList<String>(Arrays.asList("00123","00189","00138")));
+						put("00138", new ArrayList<String>(Arrays.asList("00188","00189","00191","00139","00141")));
+								put("00139", new ArrayList<String>(Arrays.asList("00138","00141","00137")));
+										put("00137", new ArrayList<String>(Arrays.asList("00139","00141","00156","00131")));
+												put("00131", new ArrayList<String>(Arrays.asList("00137","00155","00156","00132")));
+														put("00132", new ArrayList<String>(Arrays.asList("00133","00155","00131")));
+																put("00133", new ArrayList<String>(Arrays.asList("00173","00169","00155","00132")));
+put(						"00173", new ArrayList<String>(Arrays.asList("00133","00169","00175","00174","00178","00118")));
+put(						"00118", new ArrayList<String>(Arrays.asList("00173","00178")));
+put(						"00178", new ArrayList<String>(Arrays.asList("00134","00143","00142","00179","00181","00175","00174","00173","00118")));
+put(						"00143", new ArrayList<String>(Arrays.asList("00178","00134","00128","00144","00142")));
+put(						"00144", new ArrayList<String>(Arrays.asList("00143","00128","00127","00148","00146","00145","00142","00143")));
+put(						"00165", new ArrayList<String>(Arrays.asList("00163","00166","00167","00136","00193","00185","00153","00152","00164")));
+put(						"00135", new ArrayList<String>(Arrays.asList("00168","00166","00123","00189","00191","00196","00195","00136")));
+put(						"00189", new ArrayList<String>(Arrays.asList("00135","00123","00188","00138","00191")));
+put(						"00156", new ArrayList<String>(Arrays.asList("00141","00137","00155","00158","00131")));
+put(						"00155", new ArrayList<String>(Arrays.asList("00132","00131","00156","00153","00172","00177","00159","00133","00169","00171")));
+put(						"00169", new ArrayList<String>(Arrays.asList("00133","00173","00175","00172","00155")));
+put(						"00142", new ArrayList<String>(Arrays.asList("00178","00147","00179","00143","00144","00145")));
+put(						"00146", new ArrayList<String>(Arrays.asList("00144","00154","00145","00148","00149","00153")));
+put(						"00149", new ArrayList<String>(Arrays.asList("00148","00151","00152","00153","00146")));
+put(						"00151", new ArrayList<String>(Arrays.asList("00164","00152","00149","00148")));
+put(						"00164", new ArrayList<String>(Arrays.asList("00148","00151","00163","00165","00152")));
+put(						"00168", new ArrayList<String>(Arrays.asList("00166","00167","00135","00136")));
+put(						"00167", new ArrayList<String>(Arrays.asList("00168","00136","00165","00166")));
+put(						"00136", new ArrayList<String>(Arrays.asList("00167","00190","00165","00168","00135","00195")));
+put(						"00195", new ArrayList<String>(Arrays.asList("00135","00196","00190")));
+put(						"00191", new ArrayList<String>(Arrays.asList("00135","00197","00196","00189","00138","00199")));
+put(						"00196", new ArrayList<String>(Arrays.asList("00135","00195","00197","00191","00187","00185","00190")));
+put(						"00197", new ArrayList<String>(Arrays.asList("00196","00191","00189","00198","00187")));
+put(						"00189", new ArrayList<String>(Arrays.asList("00197","00191","00138","00141","00182","00198")));
+put(						"00141", new ArrayList<String>(Arrays.asList("00189","00182","00138","00139","00137","00156","00158","00157")));
+put(						"00153", new ArrayList<String>(Arrays.asList("00157","00141","00156","00155","00159")));
+put(						"00157", new ArrayList<String>(Arrays.asList("00153","00159","00185","00182","00141")));
+put(						"00159", new ArrayList<String>(Arrays.asList("00155","00177","00186","00185","00182","00158","00157")));
+put(						"00186", new ArrayList<String>(Arrays.asList("00177","00175","00181","00182","00185","00159")));
+put(						"00177", new ArrayList<String>(Arrays.asList("00155","00171","00172","00175","00181","00186","00159")));
+put(						"00171", new ArrayList<String>(Arrays.asList("00177","00155","00172")));
+put(						"00172", new ArrayList<String>(Arrays.asList("00155","00169","00175","00177","00171")));
+put(						"00175", new ArrayList<String>(Arrays.asList("00172","00169","00173","00174","00181","00186","00177")));
+put(						"00174", new ArrayList<String>(Arrays.asList("00173","00178","00175","00139","00137","00156","00158","00157")));
+put(						"00147", new ArrayList<String>(Arrays.asList("00142","00145","00154","00179","00178")));
+put(						"00145", new ArrayList<String>(Arrays.asList("00147","00142","00144","00146","00154")));
+put(						"00154", new ArrayList<String>(Arrays.asList("00146","00153","00179","00147","00145")));
+put(						"00153", new ArrayList<String>(Arrays.asList("00154","00146","00149","00152","00165","00185","00164","00179")));
+put(						"00152", new ArrayList<String>(Arrays.asList("00151","00149","00164","00153")));
+put(						"00193", new ArrayList<String>(Arrays.asList("00190","00186","00165")));
+put(						"00190", new ArrayList<String>(Arrays.asList("00165","00193","00136","00196")));
+put(						"00187", new ArrayList<String>(Arrays.asList("00185","00190","00196","00197","00198","00161","00185","00184")));
+put(						"00185", new ArrayList<String>(Arrays.asList("00184","00187","00161","00182","00159","00188","00182","00183")));
+put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","00186","00187","00185")));
+	}};
+	
+	
 	@PostMapping(path="/calcoloDistanze") // Map ONLY POST Requests
     public @ResponseBody String calcolaDistanza () {
 		List<InterventoPulizia> appartamentiDaLavareOggi= interventoPuliziaRepository.findAllInterventiOggi();
@@ -216,7 +117,7 @@ public class GoogleMapsController {
 		
 	}
 
-	private Map<String,List<String>> raggruppaCap() {
+	private Map<String,List<String>> raggruppaCap() { // RAGGRUPPA CAP (CIOE PER OGNI CAP ASSOCIA GLI APPARTAMENTI DI QUEL CAP
 		List<InterventoPulizia> interventiOggi = interventoPuliziaRepository.findAllInterventiOggi();
 		Map<String, List<String>> listaCap=new HashMap<>();
 		for(InterventoPulizia intervento: interventiOggi) {
@@ -246,6 +147,7 @@ public class GoogleMapsController {
 		 
 		    if(value.size()==4) {
 		    	gruppo.put(gruppo.size(), value);
+		    	listaCap.remove(key);
 		    }
 		    else if(value.size()>4) {
 		    	int i=0;
@@ -266,26 +168,49 @@ public class GoogleMapsController {
 		    	}
 		    }
 		}
+		
+		// UNA VOLTA FINITO DI VEDERE QUELLI MAGGIORI DI QUATTRO, CON QUELLI RIMANENTI CREA I GRUPPI
+		  Map<String,List<String>> capVicini= new HashMap<>();
+		  capVicini=trovaCapViciniOrdinato(listaCap);
+			for (Map.Entry<String,List<String>> entry: capVicini.entrySet()) { //creo i gruppi con quelli < 4
+				
+			}
+
+		
+	}
+	
+	private Map<String,List<String>> trovaCapViciniOrdinato(Map<String,List<String>> listaCap) {
+		  Map<String,List<String>> capVicini= new HashMap<>();
+		
 		for (Map.Entry<String,List<String>> entry: listaCap.entrySet()) //FA I GRUPPI CON I RIMANENTI CAP CON <4 APPARTAMENTI
 		{
+			Iterator<Map.Entry<String, List<String>>> itr = caps.entrySet().iterator();
 			
-			Iterator<Map.Entry<String, List<String>>> itr = cap.entrySet().iterator();
-			 
 			while (itr.hasNext()) {
-			    System.out.println(itr.next());
+					if(entry.getValue().contains(itr.next())) {
+						if(caps.get(entry.getKey()).contains(itr.next())) {
+							if(!capVicini.containsKey(entry.getKey())) {
+								List<String> a=new ArrayList<>();
+								a.add(itr.next().getKey());
+								capVicini.put(entry.getKey(),a);
+							} else {
+								capVicini.get(entry.getKey()).add(itr.next().getKey());
+								}
+						}
+						
+					}
+				}
 			}
-		    String key = entry.getKey();
-		    List<String> value = entry.getValue();
-		    Map<String,List<String>> capVicini= new HashMap<>();
-		    if(!capVicini.containsKey(key)) {
-		    	
-		    }
-		    if(value.size()<4) {
-		    	
-		    }
-		
+		Map<String, List<String>> sorted = capVicini.entrySet().stream()  //ORDINO DA CHI HA MENO CAP A CHI DI PIU
+			    .sorted(comparingInt(e -> e.getValue().size()))
+			    .collect(toMap(
+			        Map.Entry::getKey,
+			        Map.Entry::getValue,
+			        (a, b) -> { throw new AssertionError(); },
+			        LinkedHashMap::new
+			    )); 
+			return sorted;
 		}
-	}
 	
 	
 }
