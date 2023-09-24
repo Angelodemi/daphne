@@ -1,5 +1,15 @@
 package it.daphne.controllers;
 
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toMap;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,13 +17,14 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-import static java.util.Comparator.comparingInt;
-import static java.util.stream.Collectors.toMap;
 
-
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -36,6 +47,9 @@ public class GoogleMapsController {
 	
 	@Autowired
 	private AppartamentoRepository appartamentoRepository;
+	
+	private Map<String,List<String>> gruppo= new HashMap<>();
+
 	
 	private  Map<String,List<String>> caps= new HashMap<String,List<String>>(){{
 		put("00134", new ArrayList<String>(Arrays.asList("00128","00143","00178")));
@@ -109,14 +123,129 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 	
 	
 	@PostMapping(path="/calcoloDistanze") // Map ONLY POST Requests
-    public @ResponseBody String calcolaDistanza () {
-		List<InterventoPulizia> appartamentiDaLavareOggi= interventoPuliziaRepository.findAllInterventiOggi();
+    public String calcolaDistanza (Entry<String, List<String>> entry, List<String> capVicino, Map<String, List<String>> listaCap) throws IOException, ParseException {
 		
+		Optional<Appartamento> appartamento=appartamentoRepository.findById(entry.getKey());
+		int minimo=0;
+		String capMinimo="";
+		List<String> idAppartamentiChiave=listaCap.get(entry.getKey());
+		int duration=0;
+		int k=0;
+		int permutazioneMinima=0;
+		int kMinima=k;
+		while(k<idAppartamentiChiave.size()) {
+			List<String> idAppartamentiChiavePermutato= calcolaPermutazione(idAppartamentiChiave,k);
+			for(int i=1;i<idAppartamentiChiave.size();i++) { //calcola la distanza tra tutti gli appartamenti del cap di riferimento
+				Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i-1));
+				 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i));
+				 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+				 duration=duration + getDuration(url);
+			}
+			for(String cap: capVicino) {
+				int durationFinale=duration;
+				boolean first=true;
+				int permutazione=0;
+				List<String> idAppartamenti=listaCap.get(cap);
+				while(permutazione<idAppartamenti.size()) {
+					 List<String> idAppartamentiPermutata= calcolaPermutazione(idAppartamenti, permutazione);
+					 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamenti.get(0));
+					 Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiave.get(idAppartamentiChiave.size()-1)); //calcola la distanza dall'ultimo del cap di riferimento con il primo vicino
+					 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+					 durationFinale=durationFinale + getDuration(url);
+					 for(int i=1;i<idAppartamenti.size();i++) { //TODO : deve fare da primo a secondo a terzo, e non da primo a secondo e da primo a terzo ecc
+						a=appartamentoRepository.findById(idAppartamenti.get(i));
+						aPrec=appartamentoRepository.findById(idAppartamenti.get(i-1));
+						 url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+						 durationFinale=durationFinale + getDuration(url);
+					
+						 }
+					 if(first || durationFinale<minimo) {
+						 minimo=durationFinale;
+						 capMinimo=cap;
+						 permutazioneMinima=permutazione;
+						 kMinima=k;
+					 }
+					 first=false;
+					 permutazione++;
+				}
+			}
+			k++;
+			
+			gruppo.put(entry.getKey(),listaCap.get(capMinimo));
+			capVicino.remove(entry.getKey());
+			capVicino.remove(capMinimo);
+		}
 		return null;
 		
 		
 	}
 
+	private List<String> calcolaPermutazione(List<String> id,int k){
+		List<String> listaPermutata=new ArrayList<>();
+		for(int i=k;i<id.size();i++) {
+			listaPermutata.add(id.get(i));
+			
+		}
+		int i=0;
+		while(listaPermutata.size()<id.size()) {
+			listaPermutata.add(id.get(i));
+			i++;
+		}
+		return listaPermutata;
+	}
+	
+	@GetMapping(path="/test")
+	private @ResponseBody int getDuration(String url) throws IOException, ParseException {
+		//  String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination=via%20Cagliari,3%20Ciampino&origin=via%20palermo%20Ciampino&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+		  StringBuilder response = new StringBuilder();;
+	    try{
+	    	URL obj = new URL(url);
+	        // Apre una connessione HTTP
+	        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+	  
+
+	        // Imposta il metodo di richiesta come GET
+	        con.setRequestMethod("GET");
+	
+	        // Legge la risposta
+	        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+	        String inputLine;
+	      
+	
+	        while ((inputLine = in.readLine()) != null) {
+	            response.append(inputLine);
+	        }
+	        in.close();
+	
+	        // Stampa la risposta JSON
+	
+		   // System.out.println(response.toString());
+		   
+		    
+	 } catch (Exception e) {
+         e.printStackTrace();
+     }
+	    //recuperato il JSON, dal file recupero la distanza
+
+     
+        JSONObject jsonObject =  new JSONObject(response.toString());
+
+		String string1 =  jsonObject.getJSONArray("routes").get(0).toString();//.getBigInteger("value").intValue();
+		
+		JSONObject jsonObject2=new JSONObject(string1);
+		String string2 =  jsonObject2.getJSONArray("legs").get(0).toString();//.getBigInteger("value").intValue();
+
+		JSONObject jsonObject3=new JSONObject(string2);
+		int duration =  jsonObject3.getJSONObject("duration_in_traffic").getBigInteger("value").intValue();
+		System.out.println(duration);
+		
+		return duration;
+   
+
+	}
+	
+	
+	
 	private Map<String,List<String>> raggruppaCap() { // RAGGRUPPA CAP (CIOE PER OGNI CAP ASSOCIA GLI APPARTAMENTI DI QUEL CAP
 		List<InterventoPulizia> interventiOggi = interventoPuliziaRepository.findAllInterventiOggi();
 		Map<String, List<String>> listaCap=new HashMap<>();
@@ -136,8 +265,7 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 	 return listaCap;
 	}
 	
-	private void creaGruppi(Map<String,List<String>> listaCap) {
-		Map<Integer,List<String>> gruppo= new HashMap<>();
+	private void creaGruppi(Map<String,List<String>> listaCap) throws IOException, ParseException {
 		
 		//TODO tra i cap che ho, devo vedere i cap che sono adiacenti e ordinarli da quelli che ne hanno di meno a di piu
 		for (Map.Entry<String,List<String>> entry: listaCap.entrySet()) // FA I GRUPPI PER I CAP CHE HANNO 4 O PIU APPARTAMENTI ASSOCIATI
@@ -146,7 +274,7 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		    List<String> value = entry.getValue();
 		 
 		    if(value.size()==4) {
-		    	gruppo.put(gruppo.size(), value);
+		    	gruppo.put(key, value);
 		    	listaCap.remove(key);
 		    }
 		    else if(value.size()>4) {
@@ -154,7 +282,7 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		    	while(i<value.size()) {
 		    		List<String> cap=new ArrayList<>();
 		    		if(i%4==0 && i!=0) {
-		    			gruppo.put(gruppo.size(), cap);
+		    			gruppo.put(key, cap);
 		    			value.remove(cap.get(0));
 		    			value.remove(cap.get(1));
 		    			value.remove(cap.get(2));
@@ -173,7 +301,51 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		  Map<String,List<String>> capVicini= new HashMap<>();
 		  capVicini=trovaCapViciniOrdinato(listaCap);
 			for (Map.Entry<String,List<String>> entry: capVicini.entrySet()) { //creo i gruppi con quelli < 4
-				
+				List<String> daRaggruppare=new ArrayList<>();
+				if(entry.getValue().size()==1) {
+					if(listaCap.get(entry.getKey()).size() + listaCap.get(entry.getValue().get(0)).size() == 4){
+						
+						daRaggruppare.addAll(listaCap.get(capVicini));
+						daRaggruppare.addAll(entry.getValue());
+						gruppo.put(entry.getValue().get(0), daRaggruppare);
+						capVicini.remove(entry.getKey());
+						capVicini.remove(entry.getValue().get(0));
+					} else if(listaCap.get(entry.getKey()).size() + listaCap.get(entry.getValue().get(0)).size() < 4) {
+						capVicini.get(entry.getValue().get(0)).addAll(listaCap.get(entry.getKey()));
+						capVicini.remove(entry.getKey());
+					} else {
+						while(entry.getValue().size()<4) {
+							
+							entry.getValue().add(capVicini.get(entry.getValue().get(0)).get(0));
+							capVicini.get(entry.getValue().get(0)).remove(0);
+							
+						}
+						gruppo.put(entry.getKey(), entry.getValue());
+						capVicini.remove(entry.getKey());
+					}
+				} else if(entry.getValue().size()>1) {
+					int size= entry.getValue().size();
+					int count=0;
+					List<String> capUguali4=new ArrayList<>();
+					List<String> capDiversi4=new ArrayList<>();
+					for(int i=0;i<entry.getValue().size();i++) {
+						if(capVicini.get(entry.getValue().get(i)).size() + size == 4){ //vedo se ci sono dei cap che sommato al nostro puo formare un gruppo
+							count++;
+							capUguali4.add(entry.getValue().get(i)); 
+						} else {
+							capDiversi4.add(entry.getValue().get(i));
+						}
+					}
+					if(count==1) {
+						entry.getValue().addAll(capVicini.get(capUguali4.get(0)));
+						daRaggruppare=entry.getValue();
+						gruppo.put(entry.getKey(), daRaggruppare);
+					} else if(count >1) {
+						calcolaDistanza(entry,capUguali4,listaCap);
+					} else {
+						calcolaDistanza(entry,capDiversi4,listaCap);
+					}
+				}
 			}
 
 		

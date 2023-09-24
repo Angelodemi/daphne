@@ -12,7 +12,7 @@ import it.daphne.entity.Prenotazione;
 public interface PrenotazioneRepository extends CrudRepository<Prenotazione, String> {
 	List<Prenotazione> getByIdAppartamento(String idAppartamento);
 	
-	@Query(value = "select * from prenotazione")
+	@Query(value = "select * from prenotazione", nativeQuery = true)
 	List<Prenotazione> findAllPrenotazione();
 	
 //	@Query(value = "select * from appartamento a WHERE a.id=?1", nativeQuery = true)
