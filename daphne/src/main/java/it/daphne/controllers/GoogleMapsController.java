@@ -122,63 +122,63 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 	}};
 	
 	
-	@PostMapping(path="/calcoloDistanze") // Map ONLY POST Requests
-    public String calcolaDistanza (Entry<String, List<String>> entry, List<String> capVicino, Map<String, List<String>> listaCap) throws IOException, ParseException {
-		
-		Optional<Appartamento> appartamento=appartamentoRepository.findById(entry.getKey());
-		int minimo=0;
-		String capMinimo="";
-		List<String> idAppartamentiChiave=listaCap.get(entry.getKey());
-		int duration=0;
-		int k=0;
-		int permutazioneMinima=0;
-		int kMinima=k;
-		while(k<idAppartamentiChiave.size()) {
-			List<String> idAppartamentiChiavePermutato= calcolaPermutazione(idAppartamentiChiave,k);
-			for(int i=1;i<idAppartamentiChiave.size();i++) { //calcola la distanza tra tutti gli appartamenti del cap di riferimento
-				Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i-1));
-				 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i));
-				 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
-				 duration=duration + getDuration(url);
-			}
-			for(String cap: capVicino) {
-				int durationFinale=duration;
-				boolean first=true;
-				int permutazione=0;
-				List<String> idAppartamenti=listaCap.get(cap);
-				while(permutazione<idAppartamenti.size()) {
-					 List<String> idAppartamentiPermutata= calcolaPermutazione(idAppartamenti, permutazione);
-					 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamenti.get(0));
-					 Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiave.get(idAppartamentiChiave.size()-1)); //calcola la distanza dall'ultimo del cap di riferimento con il primo vicino
-					 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
-					 durationFinale=durationFinale + getDuration(url);
-					 for(int i=1;i<idAppartamenti.size();i++) { //TODO : deve fare da primo a secondo a terzo, e non da primo a secondo e da primo a terzo ecc
-						a=appartamentoRepository.findById(idAppartamenti.get(i));
-						aPrec=appartamentoRepository.findById(idAppartamenti.get(i-1));
-						 url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
-						 durationFinale=durationFinale + getDuration(url);
-					
-						 }
-					 if(first || durationFinale<minimo) {
-						 minimo=durationFinale;
-						 capMinimo=cap;
-						 permutazioneMinima=permutazione;
-						 kMinima=k;
-					 }
-					 first=false;
-					 permutazione++;
-				}
-			}
-			k++;
-			
-			gruppo.put(entry.getKey(),listaCap.get(capMinimo));
-			capVicino.remove(entry.getKey());
-			capVicino.remove(capMinimo);
-		}
-		return null;
-		
-		
-	}
+	
+//    public String calcolaDistanza (Entry<String, List<String>> entry, List<String> capVicino, Map<String, List<String>> listaCap) throws IOException, ParseException {
+//		
+//		Optional<Appartamento> appartamento=appartamentoRepository.findById(entry.getKey());
+//		int minimo=0;
+//		String capMinimo="";
+//		List<String> idAppartamentiChiave=listaCap.get(entry.getKey());
+//		int duration=0;
+//		int k=0;
+//		int permutazioneMinima=0;
+//		int kMinima=k;
+//		while(k<idAppartamentiChiave.size()) {
+//			List<String> idAppartamentiChiavePermutato= calcolaPermutazione(idAppartamentiChiave,k);
+//			for(int i=1;i<idAppartamentiChiave.size();i++) { //calcola la distanza tra tutti gli appartamenti del cap di riferimento
+//				Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i-1));
+//				 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i));
+//				 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+//				 duration=duration + getDuration(url);
+//			}
+//			for(String cap: capVicino) {
+//				int durationFinale=duration;
+//				boolean first=true;
+//				int permutazione=0;
+//				List<String> idAppartamenti=listaCap.get(cap);
+//				while(permutazione<idAppartamenti.size()) {
+//					 List<String> idAppartamentiPermutata= calcolaPermutazione(idAppartamenti, permutazione);
+//					 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamenti.get(0));
+//					 Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiave.get(idAppartamentiChiave.size()-1)); //calcola la distanza dall'ultimo del cap di riferimento con il primo vicino
+//					 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+//					 durationFinale=durationFinale + getDuration(url);
+//					 for(int i=1;i<idAppartamenti.size();i++) { //TODO : deve fare da primo a secondo a terzo, e non da primo a secondo e da primo a terzo ecc
+//						a=appartamentoRepository.findById(idAppartamenti.get(i));
+//						aPrec=appartamentoRepository.findById(idAppartamenti.get(i-1));
+//						 url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+//						 durationFinale=durationFinale + getDuration(url);
+//					
+//						 }
+//					 if(first || durationFinale<minimo) {
+//						 minimo=durationFinale;
+//						 capMinimo=cap;
+//						 permutazioneMinima=permutazione;
+//						 kMinima=k;
+//					 }
+//					 first=false;
+//					 permutazione++;
+//				}
+//			}
+//			k++;
+//			
+//			gruppo.put(entry.getKey(),listaCap.get(capMinimo));
+//			capVicino.remove(entry.getKey());
+//			capVicino.remove(capMinimo);
+//		}
+//		return null;
+//		
+//		
+//	}
 
 	private List<String> calcolaPermutazione(List<String> id,int k){
 		List<String> listaPermutata=new ArrayList<>();
@@ -341,9 +341,9 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 						daRaggruppare=entry.getValue();
 						gruppo.put(entry.getKey(), daRaggruppare);
 					} else if(count >1) {
-						calcolaDistanza(entry,capUguali4,listaCap);
+						calcolaDistanzaDiversi(entry,capUguali4,listaCap);
 					} else {
-						calcolaDistanza(entry,capDiversi4,listaCap);
+						calcolaDistanzaDiversi(entry,capDiversi4,listaCap);
 					}
 				}
 			}
@@ -351,6 +351,79 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		
 	}
 	
+	@PostMapping(path="/calcoloDistanze") // Map ONLY POST Requests
+	private void calcolaDistanzaDiversi(Entry<String, List<String>> entry, List<String> capVicino,
+			Map<String, List<String>> listaCap) throws IOException, ParseException {
+		
+		Optional<Appartamento> appartamento=appartamentoRepository.findById(entry.getKey());
+		int minimo=0;
+		String capMinimo="";
+		List<String> idAppartamentiChiave=listaCap.get(entry.getKey());
+		int duration=0;
+		int k=0;
+		int permutazioneMinima=0;
+		int kMinima=k;
+		while(k<idAppartamentiChiave.size()) {
+			List<String> idAppartamentiChiavePermutato= calcolaPermutazione(idAppartamentiChiave,k);
+			for(int i=1;i<idAppartamentiChiave.size();i++) { //calcola la distanza tra tutti gli appartamenti del cap di riferimento
+				Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i-1));
+				 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i));
+				 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+				 duration=duration + getDuration(url);
+			}
+			for(String cap: capVicino) {
+				int durationFinale=duration;
+				boolean first=true;
+				int permutazione=0;
+				int sizeGruppo= 4 - idAppartamentiChiave.size();
+				List<String> idAppartamenti=listaCap.get(cap);
+				while(permutazione<idAppartamenti.size()) {
+					 List<String> idAppartamentiPermutata= calcolaPermutazione(idAppartamenti, permutazione,sizeGruppo);
+					 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamenti.get(0));
+					 Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiave.get(idAppartamentiChiave.size()-1)); //calcola la distanza dall'ultimo del cap di riferimento con il primo vicino
+					 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+					 durationFinale=durationFinale + getDuration(url);
+					 for(int i=1;i<idAppartamenti.size();i++) { //TODO : deve fare da primo a secondo a terzo, e non da primo a secondo e da primo a terzo ecc
+						a=appartamentoRepository.findById(idAppartamenti.get(i));
+						aPrec=appartamentoRepository.findById(idAppartamenti.get(i-1));
+						 url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+"&origin="+aPrec.get().getIndirizzo()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+						 durationFinale=durationFinale + getDuration(url);
+					
+						 }
+					 if(first || durationFinale<minimo) {
+						 minimo=durationFinale;
+						 capMinimo=cap;
+						 permutazioneMinima=permutazione;
+						 kMinima=k;
+					 }
+					 first=false;
+					 permutazione++;
+				}
+			}
+			k++;
+			
+			gruppo.put(entry.getKey(),listaCap.get(capMinimo));
+			capVicino.remove(entry.getKey());
+			capVicino.remove(capMinimo);
+		}
+		
+	}
+
+	private List<String> calcolaPermutazione(List<String> id, int k, int sizeGruppo) {
+		List<String> listaPermutata=new ArrayList<>();
+		for(int i=k;i<id.size() && listaPermutata.size()<sizeGruppo;i++) {
+			
+			listaPermutata.add(id.get(i));
+			
+		}
+		int i=0;
+		while(listaPermutata.size()<sizeGruppo) {
+			listaPermutata.add(id.get(i));
+			i++;
+		}
+		return listaPermutata;
+	}
+
 	private Map<String,List<String>> trovaCapViciniOrdinato(Map<String,List<String>> listaCap) {
 		  Map<String,List<String>> capVicini= new HashMap<>();
 		
