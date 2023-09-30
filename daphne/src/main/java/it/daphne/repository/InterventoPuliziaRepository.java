@@ -24,17 +24,17 @@ public interface InterventoPuliziaRepository extends CrudRepository<InterventoPu
 	@Query(value = "select id_intervento_pulizia from intervento_pulizia  WHERE eliminato=true ", nativeQuery = true)
 	List<String> findAllInverventiEliminati();
 	
-	@Query(value = "select * from intervento_pulizia  WHERE trunc(data_intervento)=trunc(sysdate()) ", nativeQuery = true)	
+	@Query(value = "select * from intervento_pulizia  WHERE date(data_intervento)=date(sysdate()) ", nativeQuery = true)	
 	List<InterventoPulizia> findAllInterventiOggi();
 	
 	@Modifying
 	@Transactional
-	@Query(value = "update intervento_pulizia set eliminato=true WHERE trunc(u.data_intervento) = trunc(sysdate()) ", nativeQuery = true)
+	@Query(value = "update intervento_pulizia set eliminato=true WHERE date(u.data_intervento) = date(sysdate()) ", nativeQuery = true)
 	void setEliminatollInterventiPuliziaDelGiorno();
 	
 	@Modifying
 	@Transactional
-	@Query(value = "delete from intervento_pulizia  WHERE id_intervento_pulizia=:id and DATEDIFF ( day , trunc(data_intervento)  , trunc(sysdate()) ) >  0", nativeQuery = true)
+	@Query(value = "delete from intervento_pulizia  WHERE id_intervento_pulizia=:id and DATEDIFF ( day , date(data_intervento)  , date(sysdate()) ) >  0", nativeQuery = true)
 	void deleteAllInterventiPuliziaEliminati(@Param("id") String id);
 	
 	@Modifying
@@ -44,7 +44,7 @@ public interface InterventoPuliziaRepository extends CrudRepository<InterventoPu
 	
 	@Modifying
 	@Transactional
-	@Query(value = "delete from intervento_pulizia  WHERE DATEDIFF ( day , trunc(data_intervento)  , trunc(sysdate()) ) >  0", nativeQuery = true)
+	@Query(value = "delete from intervento_pulizia  WHERE DATEDIFF ( day , date(data_intervento)  , date(sysdate()) ) >  0", nativeQuery = true)
 	void deleteAllInterventiPuliziaDopoOggi();
 
 
