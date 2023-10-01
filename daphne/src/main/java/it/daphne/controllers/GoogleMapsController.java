@@ -295,9 +295,9 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		    			gruppo.put(key, cap1);
 		    			String capValue=value.get(i);
 		    			value.remove(cap.get(0));
-		    			value.remove(cap.get(0));
-		    			value.remove(cap.get(0));
-		    			value.remove(cap.get(0));
+		    			value.remove(cap.get(1));
+		    			value.remove(cap.get(2));
+		    			value.remove(cap.get(3));
 		    			cap.clear();
 		    			cap.add(capValue);
 		    			i++;
@@ -315,10 +315,11 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		  if(!listaCap.isEmpty()) {
 		  Map<String,List<String>> capVicini= new HashMap<>();
 		  capVicini=trovaCapViciniOrdinato(listaCap);
-		  
+		  while(capVicini.size()>0) {
+			capVicini=trovaCapViciniOrdinato(listaCap);
 			for (Map.Entry<String,List<String>> entry: capVicini.entrySet()) { //creo i gruppi con quelli < 4
 				List<String> daRaggruppare=new ArrayList<>();
-				capVicini=trovaCapViciniOrdinato(listaCap);
+				
 				if(entry.getValue().size()==1) {
 					if(listaCap.get(entry.getKey()).size() + listaCap.get(entry.getValue().get(0)).size() == 4){
 						
@@ -346,12 +347,12 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 						capVicini.remove(entry.getKey());
 					}
 				} else if(entry.getValue().size()>1) {
-					int size= entry.getValue().size();
+					int size= listaCap.get(entry.getKey()).size();
 					int count=0;
 					List<String> capUguali4=new ArrayList<>();
 					List<String> capDiversi4=new ArrayList<>();
 					for(int i=0;i<entry.getValue().size();i++) {
-						if(capVicini.get(entry.getValue().get(i)).size() + size == 4){ //vedo se ci sono dei cap che sommato al nostro puo formare un gruppo
+						if(listaCap.get(entry.getValue().get(i)).size() + size == 4){ //vedo se ci sono dei cap che sommato al nostro puo formare un gruppo
 							count++;
 							capUguali4.add(entry.getValue().get(i)); 
 						} else {
@@ -370,7 +371,9 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 						capVicini=trovaCapViciniOrdinato(listaCap);
 					}
 				}
+				break;
 			}
+		  }
 		  }
 
 			for (Map.Entry<String,List<String>> entry: gruppo.entrySet()) { 
@@ -417,7 +420,9 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		//	listaCap.remove(capVicino.get(i-1));
 			
 		}
-		while(k<idAppartamentiChiave.size() && sommaApp>4) {
+		boolean first=true;
+		while(k<idAppartamentiChiave.size() && sommaApp<4) {
+			
 			List<String> idAppartamentiChiavePermutato= calcolaPermutazione(idAppartamentiChiave,k);
 			for(int i=1;i<idAppartamentiChiave.size();i++) { //calcola la distanza tra tutti gli appartamenti del cap di riferimento
 				Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i-1));
@@ -427,7 +432,7 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 			}
 			for(String cap: capVicino) {
 				int durationFinale=duration;
-				boolean first=true;
+				
 				int permutazione=0;
 				int sizeGruppo= 4 - idAppartamentiChiave.size();
 				List<String> idAppartamenti=listaCap.get(cap);
@@ -456,13 +461,13 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 			}
 			k++;
 			
-			gruppo.put(entry.getKey(),listaCap.get(capMinimo));
-			listaCap.remove(entry.getKey());
-			listaCap.remove(capMinimo);
-			capVicino.remove(entry.getKey());
-			capVicino.remove(capMinimo);
+			
 		}
-		
+		gruppo.put(entry.getKey(),listaCap.get(capMinimo));
+		listaCap.remove(entry.getKey());
+		listaCap.remove(capMinimo);
+		capVicino.remove(entry.getKey());
+		capVicino.remove(capMinimo);
 	}
 
 	private List<String> calcolaPermutazione(List<String> id, int k, int sizeGruppo) {
