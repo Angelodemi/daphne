@@ -125,6 +125,36 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 	}};
 	
 	
+	@PostMapping(path="/calcoloDistanzeFinale") // Map ONLY POST Requests
+	private Map<String, List<String>> calcolaDistanzaFinale(Map<String,List<String>> gruppoFinale ) throws IOException, ParseException {
+		int minimo=0;
+		int duration=0;
+		int k=0;
+		boolean first=true;
+		
+		for(Map.Entry<String,List<String>> entry: gruppoFinale.entrySet())
+		while(k<entry.getValue().size()) {	
+			List<String> idAppartamentiChiavePermutato= calcolaPermutazione(entry.getValue(),k);
+			for(int i=1;i<entry.getValue().size();i++) { //calcola la distanza tra tutti gli appartamenti del cap di riferimento
+				Optional<Appartamento> aPrec=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i-1));
+				 Optional<Appartamento> a=appartamentoRepository.findById(idAppartamentiChiavePermutato.get(i));
+				 String url="https://maps.googleapis.com/maps/api/directions/json?departure_time=now&destination="+a.get().getIndirizzo()+a.get().getCitta()+"&origin="+aPrec.get().getIndirizzo()+aPrec.get().getCitta()+"&key=AIzaSyBj74-Av4z5Exmne3hzvV1eWTOSBuw03AE";
+				 duration=duration + getDuration(url);
+			}
+					 if(first || duration<minimo) {
+						 minimo=duration;
+						entry.getValue().clear();
+						entry.getValue().addAll(idAppartamentiChiavePermutato);
+						duration=0;
+					 }
+					 first=false;
+					 k++;
+				}
+		
+		return gruppoFinale;
+			
+	}
+
 	
 //    public String calcolaDistanza (Entry<String, List<String>> entry, List<String> capVicino, Map<String, List<String>> listaCap) throws IOException, ParseException {
 //		
@@ -270,7 +300,7 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 	
 	 @PostMapping(path="/creaGruppi")
 	private @ResponseBody Map<String,List<String>> creaGruppi() throws IOException, ParseException {
-		
+		 Map<String,List<String>> capVicini= new HashMap<>();
 		Map<String,List<String>> listaCap = raggruppaCap();
 		//TODO tra i cap che ho, devo vedere i cap che sono adiacenti e ordinarli da quelli che ne hanno di meno a di piu
 		for (Map.Entry<String,List<String>> entry: listaCap.entrySet()) // FA I GRUPPI PER I CAP CHE HANNO 4 O PIU APPARTAMENTI ASSOCIATI
@@ -313,7 +343,7 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 		
 		// UNA VOLTA FINITO DI VEDERE QUELLI MAGGIORI DI QUATTRO, CON QUELLI RIMANENTI CREA I GRUPPI
 		  if(!listaCap.isEmpty()) {
-		  Map<String,List<String>> capVicini= new HashMap<>();
+		 
 		  capVicini=trovaCapViciniOrdinato(listaCap);
 		  while(capVicini.size()>0) {
 			capVicini=trovaCapViciniOrdinato(listaCap);
@@ -382,7 +412,43 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 					System.out.println("id:" + id);
 				}
 			}
-			return gruppo;
+			capVicini=trovaCapViciniOrdinato(listaCap);
+			if(!capVicini.isEmpty()) {
+				for(Map.Entry<String,List<String>> entry: capVicini.entrySet()) {
+					if(entry.getValue().isEmpty()) {
+						if(listaCap.get(entry.getKey()).size() == 3){
+							gruppo.put(entry.getKey(),listaCap.get(entry.getKey()));
+							capVicini.remove(entry.getKey());
+							listaCap.remove(entry.getKey());
+						} else { //quindi < 3
+							for(String capVicino : caps.get(entry.getKey())) {
+								for(String capVicinodelVicino: capVicini.get(capVicino)) {
+									if(capVicini.containsKey(capVicinodelVicino)) {
+										if(listaCap.get(capVicinodelVicino).size()<3) {
+											List<String> daRaggruppare= listaCap.get(entry.getKey());
+											daRaggruppare.addAll(listaCap.get(capVicinodelVicino));
+											gruppo.put(capVicino, daRaggruppare);
+											capVicini.remove(entry.getKey());
+											listaCap.remove(entry.getKey());
+											capVicini.remove(entry.getKey());
+											listaCap.remove(entry.getKey());
+										}
+									}
+								}
+							}
+							
+						}
+						
+					}
+				}
+			}
+			capVicini=trovaCapViciniOrdinato(listaCap);
+			if(!capVicini.isEmpty()) {
+				for(Map.Entry<String,List<String>> entry: capVicini.entrySet()) {
+					gruppo.put(entry.getKey(),entry.getValue());
+				}
+			}
+			return calcolaDistanzaFinale(gruppo);
 	}
 	
 	@PostMapping(path="/calcoloDistanze") // Map ONLY POST Requests
