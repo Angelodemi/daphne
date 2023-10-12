@@ -4,7 +4,6 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -20,21 +19,20 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import org.hibernate.internal.build.AllowSysOut;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.mysql.cj.x.protobuf.MysqlxConnection.Capabilities;
-
 import it.daphne.entity.Appartamento;
+import it.daphne.entity.Gruppo;
+import it.daphne.entity.GruppoCap;
 import it.daphne.entity.InterventoPulizia;
 import it.daphne.repository.AppartamentoRepository;
+import it.daphne.repository.GruppoCapRepository;
+import it.daphne.repository.GruppoRepository;
 import it.daphne.repository.InterventoPuliziaRepository;
 import it.daphne.repository.PrenotazioneRepository;
 
@@ -47,6 +45,12 @@ public class GoogleMapsController {
 	
 	@Autowired
 	private InterventoPuliziaRepository interventoPuliziaRepository;
+	
+	@Autowired
+	private GruppoRepository gruppoRepository;
+	
+	@Autowired
+	private GruppoCapRepository gruppoCapRepository;
 	
 	@Autowired
 	private AppartamentoRepository appartamentoRepository;
@@ -125,6 +129,23 @@ put(						"00184", new ArrayList<String>(Arrays.asList("00183","00159","00153","
 	}};
 	
 	
+	private void insertGruppo() {
+		for(Map.Entry<String,List<String>> entry: gruppo.entrySet()) {
+			for(String cap: entry.getValue()) {
+				GruppoCap gruppoCap=new GruppoCap();
+				gruppoCap.setCap(cap);
+				gruppoCap.setIdGruppoCap(entry.getKey());
+				gruppoCapRepository.save(gruppoCap);
+			}
+		}
+		for(int i=0;i<gruppo.size();i++) {
+			Gruppo gruppo1=new Gruppo();
+			gruppo1.setIdGruppo("gruppo"+i);
+			gruppo1.setIdSquadra(i);
+			gruppoRepository.save(gruppo1);
+		}
+		
+	}
 	@PostMapping(path="/calcoloDistanzeFinale") // Map ONLY POST Requests
 	private Map<String, List<String>> calcolaDistanzaFinale(Map<String,List<String>> gruppoFinale ) throws IOException, ParseException {
 		int minimo=0;
