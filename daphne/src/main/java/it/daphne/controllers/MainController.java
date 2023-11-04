@@ -56,8 +56,10 @@ public class MainController {
   		
   	}
   	
-  	for(String id: listAppartamentiDisponibili) {
-  		verificaInterventoPulizia(id, num_ospiti, new Prenotazione("test",id,check_in,check_out,num_ospiti));
+  	for(String id: listAppartamentiDaControllare) {
+  		Prenotazione p=new Prenotazione("test",id,check_in,check_out,num_ospiti);
+  		String checkOutPrec= trovaPrenotazionePrecedente(p);
+  		verificaInterventoPulizia(checkOutPrec, num_ospiti, p);
   		listAppartamentiDisponibili.add(id);
   	}
   	System.out.println("APPARTAMENTI DISPONIBILI:");

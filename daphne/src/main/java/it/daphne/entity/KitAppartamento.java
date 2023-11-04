@@ -5,17 +5,20 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Table;
 
 @Entity
 @Table(name="KitAppartamento")
+@IdClass(KitAppartamentoId.class)
 public class KitAppartamento implements Serializable{
+
 	@Id
-	@Column(name="id_kit", length=255, nullable=false, unique=false)
+	@Column(name="id_kit", length=255, nullable=false, unique=true)
 	private String id_kit;
 	
 	@Id
-	@Column(name="id_appartamento", length=255, nullable=false, unique=false)
+	@Column(name="id_appartamento", length=255, nullable=false, unique=true)
 	private String id_appartamento;
 
 	public String getId_kit() {

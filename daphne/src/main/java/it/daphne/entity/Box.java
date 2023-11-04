@@ -7,10 +7,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.GenericGenerator;
+
 @Entity
 @Table(name="Box")
 public class Box {
 	@Id
+	@Column(name="id_box", length=255, nullable=false, unique=true)
     private String id;
 	
 	@Column(name="id_appartamento", length=255, nullable=false, unique=false)

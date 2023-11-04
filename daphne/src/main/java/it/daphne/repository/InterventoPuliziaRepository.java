@@ -27,6 +27,9 @@ public interface InterventoPuliziaRepository extends CrudRepository<InterventoPu
 	@Query(value = "select * from intervento_pulizia  WHERE date(data_intervento)=date(sysdate()) ", nativeQuery = true)	
 	List<InterventoPulizia> findAllInterventiOggi();
 	
+	@Query(value = "select id_prenotazione from intervento_pulizia  WHERE id_appartamento=:id_appartamento ", nativeQuery = true)	
+	String findIdPrenotazione(@Param("id_appartamento") String id_appartamento);
+	
 	@Modifying
 	@Transactional
 	@Query(value = "update intervento_pulizia set eliminato=true WHERE date(u.data_intervento) = date(sysdate()) ", nativeQuery = true)
